@@ -1,11 +1,9 @@
-Ниже полный HTML-документ, который делает именно то, что ты описал. Тут два этапа с 3D-анимацией, и имя Дарина убрано.
-```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0, minimum-scale=0.5">
-  <title>3D конверт – Письмо внутри</title>
+  <title>3D конверт – письмо внутри</title>
   <style>
     * {
       margin: 0;
@@ -37,7 +35,6 @@
       transform: scale(0.98);
     }
 
-    /* Общий 3D-контейнер */
     .three-d-wrapper {
       width: 100%;
       height: 100%;
@@ -46,12 +43,10 @@
       transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
     }
 
-    /* Состояния поворота для второго этапа (открытие бумажника/письма) */
     .stage2-open .three-d-wrapper {
       transform: rotateY(-160deg);
     }
 
-    /* Карточки-сцены */
     .card-face {
       position: absolute;
       width: 100%;
@@ -69,7 +64,6 @@
       transition: box-shadow 0.4s;
     }
 
-    /* Лицевая сторона — закрытый конверт (сцена 1) */
     .front-envelope {
       background: #c79a6e;
       background: linear-gradient(145deg, #dbb07b 0%, #b5824a 100%);
@@ -82,7 +76,6 @@
       position: relative;
     }
 
-    /* Треугольный клапан конверта */
     .envelope-flap {
       position: absolute;
       top: 0;
@@ -99,12 +92,10 @@
       z-index: 10;
     }
 
-    /* Когда конверт открыт (этап 1 завершён) – клапан откидывается вверх */
     .stage1-done .envelope-flap {
       transform: rotateX(-170deg);
     }
 
-    /* Бумажная текстура внутри под клапаном */
     .envelope-paper-hint {
       background: #fdf7ed;
       width: 92%;
@@ -157,7 +148,6 @@
       font-size: 1.1rem;
     }
 
-    /* Задняя сторона (сцена 2 – закрытый бумажник / сложенное письмо) */
     .back-folded-letter {
       background: #f7efe0;
       background-image: linear-gradient(45deg, #f3e7d3 10%, #fdf5e6 80%);
@@ -229,7 +219,6 @@
       border-radius: 20px;
     }
 
-    /* Внутренняя сторона – полностью открытое письмо (последняя сцена) */
     .inner-full-letter {
       background: #fdf8f0;
       background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 20 L80 20 L80 80 L20 80 Z" stroke="%23d4b68c" stroke-width="1.2" fill="none" opacity="0.4"/><path d="M25 40 L75 40 M25 55 L70 55 M25 70 L60 70" stroke="%23c8aa7a" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.6"/></svg>');
@@ -293,7 +282,6 @@
       margin: 10px 0;
     }
 
-    /* Подсказка */
     .instruction {
       position: fixed;
       bottom: 25px;
@@ -324,10 +312,9 @@
 </head>
 <body>
   <div class="scene-container" id="sceneContainer">
-    <!-- 3D вращающийся блок -->
     <div class="three-d-wrapper" id="threeDWrapper">
       
-      <!-- Сцена 1: Закрытый конверт (фронтальная) -->
+      <!-- Сцена 1: Закрытый конверт -->
       <div class="card-face front-envelope">
         <div class="envelope-flap" id="envelopeFlap"></div>
         <div class="envelope-paper-hint">
@@ -336,7 +323,7 @@
         <div class="front-text">✨ Нажми на конверт</div>
       </div>
 
-      <!-- Сцена 2: Закрытый бумажник / сложенное письмо (задняя сторона) -->
+      <!-- Сцена 2: Сложенное письмо с лентой -->
       <div class="card-face back-folded-letter">
         <div class="fold-cover">
           <div class="ribbon-horizontal"></div>
@@ -346,17 +333,17 @@
         </div>
       </div>
 
-      <!-- Сцена 3: Полностью открытое письмо (внутренняя сторона) -->
+      <!-- Сцена 3: Полностью открытое письмо -->
       <div class="card-face inner-full-letter">
         <div class="letter-content">
           <div class="greeting">Дорогой друг!</div>
           <div class="heart-icon">❤️</div>
           <div class="message-text">
-            Пусть каждый день приносит<br>
-            радость и вдохновение.<br>
-            Ты способен на великие дела!
+            Я очень тебя люблю<br>
+            и хочу быть рядом,<br>
+            когда я тебе нужна.
           </div>
-          <div class="signature">С теплом,<br>Алексей</div>
+          <div class="signature">С любовью, Дарина ❤️</div>
           <div style="font-size:0.9rem; margin-top:10px; color:#7b5e42;">✨</div>
         </div>
       </div>
@@ -367,67 +354,49 @@
 
   <script>
     (function() {
-      // Элементы
       const container = document.getElementById('sceneContainer');
       const wrapper = document.getElementById('threeDWrapper');
       const flap = document.getElementById('envelopeFlap');
       const instruction = document.getElementById('instructionText');
 
-      // Состояния: 0 = закрытый конверт, 1 = конверт открыт (клапан поднят), 2 = бумажник открыт (показано письмо)
       let stage = 0; // 0, 1, 2
-
-      // Блокировка анимации, чтобы не спамить кликами
       let isAnimating = false;
 
       function updateUI() {
-        // Сначала убираем все классы стадий с wrapper и flap
         wrapper.classList.remove('stage2-open');
-        // flap управляется классом stage1-done у родителя или мы сами добавим класс контейнеру?
-        // Удобнее управлять классами контейнера scene-container
         container.classList.remove('stage1-done');
         
         if (stage === 0) {
-          // Всё закрыто: конверт front, клапан опущен
           instruction.textContent = '👆 Нажми на конверт, чтобы открыть';
         } else if (stage === 1) {
-          // Конверт открыт (клапан поднят), но бумажник ещё не повёрнут
           container.classList.add('stage1-done');
           instruction.textContent = '📬 Нажми ещё раз, чтобы открыть письмо';
         } else if (stage === 2) {
-          // Полностью открыто: конверт уже позади, показываем внутреннее письмо
-          container.classList.add('stage1-done'); // клапан остаётся открытым
+          container.classList.add('stage1-done');
           wrapper.classList.add('stage2-open');
           instruction.textContent = '💌 Теплые слова для тебя';
         }
       }
 
-      // Функция перехода на следующую стадию
       function goToNextStage() {
         if (isAnimating) return;
         
         if (stage === 0) {
-          // Этап 1: открыть конверт (поднять клапан)
           isAnimating = true;
           stage = 1;
           updateUI();
-          // Ждём завершения анимации клапана (0.75s), затем разблокируем
           setTimeout(() => {
             isAnimating = false;
           }, 750);
         } else if (stage === 1) {
-          // Этап 2: открыть бумажник – повернуть 3D-сцену, чтобы показать внутреннее письмо
           isAnimating = true;
           stage = 2;
           updateUI();
-          // Анимация поворота wrapper длится 0.7s
           setTimeout(() => {
             isAnimating = false;
           }, 720);
         } else if (stage === 2) {
-          // Уже полностью открыто – можно ничего не делать или сбросить по желанию.
-          // Добавим возможность сброса на начальную стадию по двойному нажатию, но по условию не требуется.
-          // Оставим как есть, либо мягкий сброс через долгое нажатие? Не будем усложнять.
-          // Сделаем так: при клике на stage 2 возвращаемся на stage 0 (цикл).
+          // Циклический возврат к началу
           if (isAnimating) return;
           isAnimating = true;
           stage = 0;
@@ -438,15 +407,13 @@
         }
       }
 
-      // Обработчик клика по контейнеру
       container.addEventListener('click', (e) => {
         e.stopPropagation();
         goToNextStage();
       });
 
-      // Для мобильных устройств – предотвращаем двойные срабатывания
       container.addEventListener('touchstart', (e) => {
-        e.preventDefault(); // чтобы не было лишних событий
+        e.preventDefault();
       }, {passive: false});
 
       container.addEventListener('touchend', (e) => {
@@ -454,10 +421,9 @@
         goToNextStage();
       });
 
-      // Инициализация UI
+      // Инициализация
       updateUI();
 
-      // Дополнительно: убедимся, что при загрузке стадия 0
       window.addEventListener('load', () => {
         stage = 0;
         isAnimating = false;
@@ -470,4 +436,3 @@
   </script>
 </body>
 </html>
-```
