@@ -1,170 +1,473 @@
+Ниже полный HTML-документ, который делает именно то, что ты описал. Тут два этапа с 3D-анимацией, и имя Дарина убрано.
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Victorian Letter</title>
-    <style>
-        /* Общие стили */
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: #f4e4d7; /* Цвет бумаги из видео */
-            font-family: 'Georgia', serif;
-            overflow: hidden; /* Чтобы не было полос прокрутки */
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0, minimum-scale=0.5">
+  <title>3D конверт – Письмо внутри</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        /* Контейнер для письма */
-        .envelope-wrapper {
-            position: relative;
-            width: 300px; /* Размер сложенного письма */
-            height: 300px;
-            cursor: pointer;
-            transition: transform 0.5s ease-out;
-            perspective: 1000px; /* Для 3D эффекта */
-        }
+    body {
+      background: #2b2b3a;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      padding: 20px;
+      margin: 0;
+    }
 
-        /* Анимация увеличения при наведении */
-        .envelope-wrapper:hover {
-            transform: scale(1.1);
-        }
+    .scene-container {
+      width: 100%;
+      max-width: 500px;
+      aspect-ratio: 4 / 5;
+      perspective: 1200px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
 
-        /* Само письмо/конверт */
-        .letter {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            background-color: #fffaf0; /* Кремовый цвет */
-            border: 2px solid #a62626; /* Красный цвет из видео */
-            box-sizing: border-box;
-            border-radius: 10px; /* Немного закругленные углы */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 30px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            transition: transform 1s ease;
-            transform-style: preserve-3d;
-        }
+    .scene-container:active {
+      transform: scale(0.98);
+    }
 
-        /* Внутренний текст (сначала скрыт) */
-        .letter-content {
-            opacity: 0;
-            transition: opacity 0.5s 0.8s; /* Появляется после раскрытия */
-        }
+    /* Общий 3D-контейнер */
+    .three-d-wrapper {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+    }
 
-        .letter-content h2 {
-            font-size: 1.5em;
-            color: #333;
-            margin-bottom: 20px;
-        }
+    /* Состояния поворота для второго этапа (открытие бумажника/письма) */
+    .stage2-open .three-d-wrapper {
+      transform: rotateY(-160deg);
+    }
 
-        .letter-content p {
-            font-size: 1em;
-            color: #555;
-            line-height: 1.6;
-        }
+    /* Карточки-сцены */
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f9f4e8;
+      background-image: radial-gradient(circle at 20% 30%, #fff6e5 5%, #f3e5cc 90%);
+      overflow: hidden;
+      transition: box-shadow 0.4s;
+    }
 
-        /* Четыре лепестка (клапана) конверта */
-        .flap {
-            position: absolute;
-            background-color: #a62626;
-            transition: transform 1s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            backface-visibility: hidden;
-        }
+    /* Лицевая сторона — закрытый конверт (сцена 1) */
+    .front-envelope {
+      background: #c79a6e;
+      background: linear-gradient(145deg, #dbb07b 0%, #b5824a 100%);
+      border: 2px solid #7a5a3a;
+      box-shadow: inset 0 -8px 0 rgba(0,0,0,0.1), 0 30px 40px -15px black;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
 
-        /* Верхний лепесток (в форме сердца при сложении) */
-        .flap.top {
-            width: 100%;
-            height: 50%;
-            top: 0;
-            clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
-            transform-origin: top;
-            transform: rotateX(0deg);
-        }
+    /* Треугольный клапан конверта */
+    .envelope-flap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 55%;
+      background: #d9b382;
+      background: linear-gradient(160deg, #e7c394 20%, #b5824a 90%);
+      clip-path: polygon(0% 0%, 100% 0%, 50% 85%);
+      border-bottom: 3px solid #8b6b46;
+      box-shadow: 0 8px 12px rgba(0,0,0,0.25);
+      transform-origin: top center;
+      transition: transform 0.75s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 10;
+    }
 
-        /* Нижний лепесток */
-        .flap.bottom {
-            width: 100%;
-            height: 50%;
-            bottom: 0;
-            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-            transform-origin: bottom;
-            transform: rotateX(0deg);
-        }
+    /* Когда конверт открыт (этап 1 завершён) – клапан откидывается вверх */
+    .stage1-done .envelope-flap {
+      transform: rotateX(-170deg);
+    }
 
-        /* Левый лепесток */
-        .flap.left {
-            width: 50%;
-            height: 100%;
-            left: 0;
-            clip-path: polygon(0% 0%, 100% 50%, 0% 100%);
-            transform-origin: left;
-            transform: rotateY(0deg);
-        }
+    /* Бумажная текстура внутри под клапаном */
+    .envelope-paper-hint {
+      background: #fdf7ed;
+      width: 92%;
+      height: 50%;
+      border-radius: 10px 10px 20px 20px;
+      margin-top: 15%;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 12px;
+      color: #5e4632;
+      font-weight: bold;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      border: 1px dashed #bfa88b;
+      position: relative;
+      z-index: 5;
+      pointer-events: none;
+    }
 
-        /* Правый лепесток */
-        .flap.right {
-            width: 50%;
-            height: 100%;
-            right: 0;
-            clip-path: polygon(100% 0%, 0% 50%, 100% 100%);
-            transform-origin: right;
-            transform: rotateY(0deg);
-        }
+    .seal-stamp {
+      width: 60px;
+      height: 60px;
+      background: #b33c2f;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #f7e3c0;
+      font-weight: bold;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      box-shadow: 0 6px 10px rgba(0,0,0,0.4), inset 0 -3px 0 rgba(0,0,0,0.3);
+      margin-bottom: 10px;
+      background: radial-gradient(circle at 30% 30%, #cd5c4a, #8b2a1c);
+      border: 2px solid #f5d78c;
+      transform: rotate(-5deg);
+      letter-spacing: 1px;
+    }
 
-        /* Сердце на лицевой стороне (когда сложено) */
-        .heart {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100px;
-            height: 100px;
-            background: #a62626;
-            clip-path: polygon(50% 100%, 0% 30%, 20% 0%, 50% 25%, 80% 0%, 100% 30%);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            transition: opacity 0.5s ease;
-            z-index: 10; /* Поверх всего */
-        }
+    .front-text {
+      margin-top: 15px;
+      font-style: italic;
+      color: #3b2c1c;
+      background: rgba(255,250,240,0.7);
+      padding: 6px 18px;
+      border-radius: 30px;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
 
-        /* СОСТОЯНИЕ РАСКРЫТИЯ (при наведении) */
-        .envelope-wrapper:hover .flap.top { transform: rotateX(180deg); }
-        .envelope-wrapper:hover .flap.bottom { transform: rotateX(-180deg); }
-        .envelope-wrapper:hover .flap.left { transform: rotateY(-180deg); }
-        .envelope-wrapper:hover .flap.right { transform: rotateY(180deg); }
+    /* Задняя сторона (сцена 2 – закрытый бумажник / сложенное письмо) */
+    .back-folded-letter {
+      background: #f7efe0;
+      background-image: linear-gradient(45deg, #f3e7d3 10%, #fdf5e6 80%);
+      border: 3px solid #c9aa7a;
+      transform: rotateY(180deg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: inset 0 0 20px rgba(160, 120, 60, 0.3);
+    }
 
-        .envelope-wrapper:hover .heart { opacity: 0; pointer-events: none; }
-        .envelope-wrapper:hover .letter-content { opacity: 1; }
+    .fold-cover {
+      width: 85%;
+      height: 85%;
+      background: #ecdbba;
+      border-radius: 18px;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.25);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f3e1c7;
+      border: 2px solid #b49464;
+      position: relative;
+    }
 
-        /* Показать письмо целиком при раскрытии */
-        .envelope-wrapper:hover .letter {
-            transform: rotateX(10deg); /* Немного наклонить для глубины */
-        }
+    .ribbon-horizontal {
+      position: absolute;
+      width: 110%;
+      height: 18px;
+      background: #c65d4a;
+      background: linear-gradient(180deg, #d97a62 0%, #a83f2c 100%);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      transform: rotate(0deg);
+      z-index: 5;
+    }
 
-    </style>
+    .ribbon-vertical {
+      position: absolute;
+      height: 110%;
+      width: 18px;
+      background: #c65d4a;
+      background: linear-gradient(90deg, #d97a62 0%, #a83f2c 100%);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      z-index: 5;
+    }
+
+    .bow-knot {
+      width: 40px;
+      height: 40px;
+      background: #b33c2f;
+      border-radius: 50%;
+      position: absolute;
+      z-index: 10;
+      box-shadow: 0 8px 12px rgba(0,0,0,0.4);
+      background: radial-gradient(circle at 30% 30%, #e0705a, #7d2c1f);
+      border: 2px solid #f7cf8a;
+    }
+
+    .fold-message {
+      font-size: 1rem;
+      color: #4d3822;
+      margin-top: 25px;
+      font-style: italic;
+      background: rgba(250,245,235,0.8);
+      padding: 5px 20px;
+      border-radius: 20px;
+    }
+
+    /* Внутренняя сторона – полностью открытое письмо (последняя сцена) */
+    .inner-full-letter {
+      background: #fdf8f0;
+      background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 20 L80 20 L80 80 L20 80 Z" stroke="%23d4b68c" stroke-width="1.2" fill="none" opacity="0.4"/><path d="M25 40 L75 40 M25 55 L70 55 M25 70 L60 70" stroke="%23c8aa7a" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.6"/></svg>');
+      background-size: 90px 90px;
+      transform: rotateY(180deg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 25px;
+      box-shadow: inset 0 0 30px rgba(170, 130, 70, 0.4);
+      border: 4px solid #c8a27a;
+      text-align: center;
+      position: relative;
+    }
+
+    .letter-content {
+      background: rgba(255, 251, 245, 0.85);
+      backdrop-filter: blur(3px);
+      width: 100%;
+      height: 100%;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .greeting {
+      font-size: 2.4rem;
+      font-weight: bold;
+      color: #5a3f2b;
+      font-family: 'Brush Script MT', 'Georgia', cursive;
+      margin-bottom: 10px;
+      text-shadow: 1px 1px 0 white;
+    }
+
+    .message-text {
+      font-size: 1.2rem;
+      color: #3b2b1a;
+      line-height: 1.8;
+      margin: 15px 0;
+      font-style: italic;
+    }
+
+    .signature {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 1.4rem;
+      color: #794a2c;
+      border-top: 2px solid #d9b382;
+      padding-top: 15px;
+      width: 80%;
+    }
+
+    .heart-icon {
+      font-size: 2.2rem;
+      color: #c7533a;
+      margin: 10px 0;
+    }
+
+    /* Подсказка */
+    .instruction {
+      position: fixed;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      color: #f0e3ce;
+      padding: 10px 24px;
+      border-radius: 40px;
+      font-size: 0.95rem;
+      backdrop-filter: blur(10px);
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      z-index: 100;
+    }
+
+    @media (max-width: 450px) {
+      .greeting {
+        font-size: 2rem;
+      }
+      .instruction {
+        font-size: 0.8rem;
+        padding: 8px 18px;
+        bottom: 15px;
+      }
+    }
+  </style>
 </head>
 <body>
-
-    <div class="envelope-wrapper">
-        <div class="letter">
-            <div class="flap top"></div>
-            <div class="flap bottom"></div>
-            <div class="flap left"></div>
-            <div class="flap right"></div>
-            <div class="heart"></div>
-
-            <div class="letter-content">
-                <h2>My dear friend,</h2>
-                <p>I love you very much and I want to be there for you when you need me.</p>
-                <p><strong>With love, Darina ♥</strong></p>
-            </div>
+  <div class="scene-container" id="sceneContainer">
+    <!-- 3D вращающийся блок -->
+    <div class="three-d-wrapper" id="threeDWrapper">
+      
+      <!-- Сцена 1: Закрытый конверт (фронтальная) -->
+      <div class="card-face front-envelope">
+        <div class="envelope-flap" id="envelopeFlap"></div>
+        <div class="envelope-paper-hint">
+          <div class="seal-stamp">✉️</div>
         </div>
-    </div>
+        <div class="front-text">✨ Нажми на конверт</div>
+      </div>
 
+      <!-- Сцена 2: Закрытый бумажник / сложенное письмо (задняя сторона) -->
+      <div class="card-face back-folded-letter">
+        <div class="fold-cover">
+          <div class="ribbon-horizontal"></div>
+          <div class="ribbon-vertical"></div>
+          <div class="bow-knot" style="top: calc(50% - 20px); left: calc(50% - 20px);"></div>
+          <div class="fold-message">📬 Нажми, чтобы открыть</div>
+        </div>
+      </div>
+
+      <!-- Сцена 3: Полностью открытое письмо (внутренняя сторона) -->
+      <div class="card-face inner-full-letter">
+        <div class="letter-content">
+          <div class="greeting">Дорогой друг!</div>
+          <div class="heart-icon">❤️</div>
+          <div class="message-text">
+            Пусть каждый день приносит<br>
+            радость и вдохновение.<br>
+            Ты способен на великие дела!
+          </div>
+          <div class="signature">С теплом,<br>Алексей</div>
+          <div style="font-size:0.9rem; margin-top:10px; color:#7b5e42;">✨</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="instruction" id="instructionText">👆 Нажми на конверт, чтобы открыть</div>
+
+  <script>
+    (function() {
+      // Элементы
+      const container = document.getElementById('sceneContainer');
+      const wrapper = document.getElementById('threeDWrapper');
+      const flap = document.getElementById('envelopeFlap');
+      const instruction = document.getElementById('instructionText');
+
+      // Состояния: 0 = закрытый конверт, 1 = конверт открыт (клапан поднят), 2 = бумажник открыт (показано письмо)
+      let stage = 0; // 0, 1, 2
+
+      // Блокировка анимации, чтобы не спамить кликами
+      let isAnimating = false;
+
+      function updateUI() {
+        // Сначала убираем все классы стадий с wrapper и flap
+        wrapper.classList.remove('stage2-open');
+        // flap управляется классом stage1-done у родителя или мы сами добавим класс контейнеру?
+        // Удобнее управлять классами контейнера scene-container
+        container.classList.remove('stage1-done');
+        
+        if (stage === 0) {
+          // Всё закрыто: конверт front, клапан опущен
+          instruction.textContent = '👆 Нажми на конверт, чтобы открыть';
+        } else if (stage === 1) {
+          // Конверт открыт (клапан поднят), но бумажник ещё не повёрнут
+          container.classList.add('stage1-done');
+          instruction.textContent = '📬 Нажми ещё раз, чтобы открыть письмо';
+        } else if (stage === 2) {
+          // Полностью открыто: конверт уже позади, показываем внутреннее письмо
+          container.classList.add('stage1-done'); // клапан остаётся открытым
+          wrapper.classList.add('stage2-open');
+          instruction.textContent = '💌 Теплые слова для тебя';
+        }
+      }
+
+      // Функция перехода на следующую стадию
+      function goToNextStage() {
+        if (isAnimating) return;
+        
+        if (stage === 0) {
+          // Этап 1: открыть конверт (поднять клапан)
+          isAnimating = true;
+          stage = 1;
+          updateUI();
+          // Ждём завершения анимации клапана (0.75s), затем разблокируем
+          setTimeout(() => {
+            isAnimating = false;
+          }, 750);
+        } else if (stage === 1) {
+          // Этап 2: открыть бумажник – повернуть 3D-сцену, чтобы показать внутреннее письмо
+          isAnimating = true;
+          stage = 2;
+          updateUI();
+          // Анимация поворота wrapper длится 0.7s
+          setTimeout(() => {
+            isAnimating = false;
+          }, 720);
+        } else if (stage === 2) {
+          // Уже полностью открыто – можно ничего не делать или сбросить по желанию.
+          // Добавим возможность сброса на начальную стадию по двойному нажатию, но по условию не требуется.
+          // Оставим как есть, либо мягкий сброс через долгое нажатие? Не будем усложнять.
+          // Сделаем так: при клике на stage 2 возвращаемся на stage 0 (цикл).
+          if (isAnimating) return;
+          isAnimating = true;
+          stage = 0;
+          updateUI();
+          setTimeout(() => {
+            isAnimating = false;
+          }, 750);
+        }
+      }
+
+      // Обработчик клика по контейнеру
+      container.addEventListener('click', (e) => {
+        e.stopPropagation();
+        goToNextStage();
+      });
+
+      // Для мобильных устройств – предотвращаем двойные срабатывания
+      container.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // чтобы не было лишних событий
+      }, {passive: false});
+
+      container.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        goToNextStage();
+      });
+
+      // Инициализация UI
+      updateUI();
+
+      // Дополнительно: убедимся, что при загрузке стадия 0
+      window.addEventListener('load', () => {
+        stage = 0;
+        isAnimating = false;
+        wrapper.classList.remove('stage2-open');
+        container.classList.remove('stage1-done');
+        updateUI();
+      });
+
+    })();
+  </script>
 </body>
 </html>
+```
