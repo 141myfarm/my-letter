@@ -1,401 +1,224 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0, minimum-scale=0.5">
-  <title>3D Письмо-Секрет</title>
-  <style>
-    :root {
-      /* Размеры закрытого письма */
-      --size: 300px;
-      --half: 150px;
-      
-      /* Цвета */
-      --bg-paper: #f4ebd8;
-      --bg-dark: #1a1a24;
-      --text-color: #4a3623;
-      --heart-color: #a62828;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моему дорогому другу</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500;1,700&family=Great+Vibes&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: #1a1b1c; /* Темный фон как на фото */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Cormorant Garamond', serif;
+            overflow: hidden;
+            perspective: 1500px; /* Добавляем глубину для 3D */
+        }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+        /* Контейнер сцены */
+        #scene {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            transform-style: preserve-3d;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
 
-    body {
-      background: var(--bg-dark);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Georgia', 'Times New Roman', serif;
-      overflow: hidden;
-    }
+        /* Центральная часть листа (там где текст) */
+        .base-paper {
+            position: absolute;
+            top: 0; left: 0;
+            width: 260px; height: 260px;
+            background: #f4ebd8; /* Цвет старой бумаги */
+            box-shadow: inset 0 0 50px rgba(110, 80, 40, 0.2), 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border: 1px solid rgba(139, 100, 50, 0.3);
+        }
 
-    /* 3D Сцена */
-    .scene {
-      perspective: 1400px;
-      width: var(--size);
-      height: var(--size);
-      position: relative;
-    }
+        /* Красивые рамки внутри, чтобы имитировать узоры */
+        .base-paper::before {
+            content: '';
+            position: absolute;
+            top: 8px; left: 8px; right: 8px; bottom: 8px;
+            border: 1px solid rgba(139, 100, 50, 0.4);
+        }
+        .base-paper::after {
+            content: '';
+            position: absolute;
+            top: 12px; left: 12px; right: 12px; bottom: 12px;
+            border: 1px dashed rgba(139, 100, 50, 0.3);
+        }
 
-    /* Главный контейнер письма */
-    .letter-wrapper {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transform-style: preserve-3d;
-      transition: transform 1.5s cubic-bezier(0.25, 1, 0.25, 1);
-      cursor: pointer;
-      /* Легкий наклон в начальном положении для 3D-эффекта */
-      transform: rotateX(15deg) rotateZ(-5deg);
-    }
+        /* Стили текста */
+        .greeting {
+            font-size: 24px;
+            font-weight: 700;
+            color: #3d2a1d;
+            margin-bottom: 10px;
+            z-index: 2;
+        }
+        .message {
+            font-size: 20px;
+            font-weight: 500;
+            color: #4a3324;
+            line-height: 1.4;
+            margin-bottom: 20px;
+            z-index: 2;
+        }
+        .signature {
+            font-family: 'Great Vibes', cursive;
+            font-size: 32px;
+            color: #8b2126; /* Цвет красных чернил/лепестков */
+            z-index: 2;
+        }
+        .heart-icon {
+            font-size: 18px;
+            color: #c92a2a;
+        }
 
-    /* Центральная часть (само письмо) */
-    .letter-base {
-      position: absolute;
-      inset: 0;
-      background: var(--bg-paper);
-      box-shadow: inset 0 0 40px rgba(100, 60, 20, 0.15), 0 15px 35px rgba(0,0,0,0.6);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 25px;
-      border: 2px dashed rgba(100, 60, 20, 0.3);
-      z-index: 1;
-    }
+        /* Настройка створок (Flaps) */
+        .flap {
+            position: absolute;
+            transform-style: preserve-3d;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 0 5px rgba(0,0,0,0.3));
+        }
 
-    .letter-base h1 {
-      font-size: 1.8rem;
-      color: var(--text-color);
-      margin-bottom: 15px;
-    }
+        .face {
+            position: absolute;
+            width: 100%; height: 100%;
+            backface-visibility: hidden;
+            background: #f4ebd8; /* Цвет бумаги внутри */
+        }
 
-    .letter-base p {
-      font-size: 1.1rem;
-      line-height: 1.6;
-      font-style: italic;
-      color: #5a4024;
-      margin-bottom: 25px;
-    }
+        .face.outer {
+            background: #e8dbxc; /* Чуть темнее снаружи */
+            /* Здесь имитируем рисунок на закрытом конверте */
+            background-image: radial-gradient(circle, #f2e6d0 40%, #dfcbb0 100%);
+        }
 
-    .signature {
-      font-weight: bold;
-      font-size: 1.3rem;
-      color: var(--heart-color);
-    }
+        /* Создаем форму треугольников для створок */
+        .flap.top    { top: -130px; left: 0; width: 260px; height: 130px; transform-origin: bottom; }
+        .flap.bottom { bottom: -130px; left: 0; width: 260px; height: 130px; transform-origin: top; }
+        .flap.left   { top: 0; left: -130px; width: 130px; height: 260px; transform-origin: right; }
+        .flap.right  { top: 0; right: -130px; width: 130px; height: 260px; transform-origin: left; }
 
-    /* Общие стили для 4-х створок */
-    .flap {
-      position: absolute;
-      transform-style: preserve-3d;
-      transition: transform 1.5s cubic-bezier(0.34, 1.2, 0.64, 1);
-      z-index: 5;
-    }
+        .flap.top .face    { clip-path: polygon(50% 0, 0 100%, 100% 100%); }
+        .flap.bottom .face { clip-path: polygon(0 0, 100% 0, 50% 100%); }
+        .flap.left .face   { clip-path: polygon(100% 0, 100% 100%, 0 50%); }
+        .flap.right .face  { clip-path: polygon(0 0, 100% 50%, 0 100%); }
 
-    /* Лицевая и обратная сторона каждой створки */
-    .face {
-      position: absolute;
-      inset: 0;
-      backface-visibility: hidden;
-      background: var(--bg-paper);
-      overflow: hidden;
-    }
+        /* Разворачиваем внешние стороны створок для правильного 3D */
+        .flap.top .face.outer    { transform: rotateX(180deg); }
+        .flap.bottom .face.outer { transform: rotateX(180deg); }
+        .flap.left .face.outer   { transform: rotateY(180deg); }
+        .flap.right .face.outer  { transform: rotateY(180deg); }
 
-    /* Внешняя сторона (с кусочками сердца) */
-    .face.front {
-      background-image: radial-gradient(circle at center, #fbf6ec 0%, #e2d1b4 100%);
-      box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
-    }
+        /* Чтобы нарисовать сердце на внешней стороне (когда закрыто) */
+        .heart-part {
+            position: absolute;
+            background: #8b2126; /* Темно-красный цвет сердца */
+        }
+        .flap.top .outer .heart-part { bottom: 0; left: 80px; width: 100px; height: 50px; border-radius: 50px 50px 0 0; }
+        .flap.bottom .outer .heart-part { top: 0; left: 105px; width: 50px; height: 50px; clip-path: polygon(50% 100%, 0 0, 100% 0); }
+        .flap.left .outer .heart-part { right: 0; top: 105px; width: 50px; height: 50px; clip-path: polygon(100% 0, 100% 100%, 0 50%); }
+        .flap.right .outer .heart-part { left: 0; top: 105px; width: 50px; height: 50px; clip-path: polygon(0 0, 0 100%, 100% 50%); }
 
-    /* Внутренняя сторона (с рисунками) */
-    .face.back {
-      background-image: radial-gradient(circle at center, #f8f1e3 0%, #d5c3a3 100%);
-      border: 1px solid rgba(100, 60, 20, 0.2);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 2.5rem;
-    }
+        /* === СОСТОЯНИЯ АНИМАЦИИ (3 ШАГА) === */
 
-    /* Холст для точного разделения сердца и узоров */
-    .heart-canvas {
-      position: absolute;
-      width: var(--size);
-      height: var(--size);
-      pointer-events: none;
-    }
+        /* ШАГ 1: Полностью закрыто (Квадрат) */
+        .state-0 .flap.top    { transform: rotateX(-179deg); } /* -179 вместо 180, чтобы браузер не «мерцал» */
+        .state-0 .flap.bottom { transform: rotateX(179deg); }
+        .state-0 .flap.left   { transform: rotateY(179deg); }
+        .state-0 .flap.right  { transform: rotateY(-179deg); }
+        .state-0 { transform: scale(1) rotateZ(0deg); }
 
-    /* Винтажная рамка снаружи */
-    .vintage-border {
-      position: absolute;
-      inset: 12px;
-      border: 2px solid #6b4d31;
-      border-radius: 8px;
-    }
+        /* ШАГ 2: Полуоткрытая звездочка (Сцена 2) */
+        .state-1 .flap.top    { transform: rotateX(-120deg); }
+        .state-1 .flap.bottom { transform: rotateX(120deg); }
+        .state-1 .flap.left   { transform: rotateY(120deg); }
+        .state-1 .flap.right  { transform: rotateY(-120deg); }
+        .state-1 { transform: scale(0.85) rotateX(30deg); } /* Слегка отдаляем и наклоняем для 3D эффекта */
 
-    /* Угловые узоры снаружи */
-    .corner-decor {
-      position: absolute;
-      font-size: 1.5rem;
-      color: #6b4d31;
-      opacity: 0.6;
-    }
-    .c-tl { top: 18px; left: 18px; }
-    .c-tr { top: 18px; right: 18px; }
-    .c-bl { bottom: 18px; left: 18px; }
-    .c-br { bottom: 18px; right: 18px; }
+        /* ШАГ 3: Полностью открыто (Плоский лист) */
+        .state-2 .flap        { transform: rotate(0deg); }
+        .state-2 { transform: scale(1.1) rotateX(0deg); } /* Увеличиваем, чтобы было удобно читать */
 
-    /* Само сердце */
-    .heart {
-      width: 110px;
-      height: 110px;
-      background: var(--heart-color);
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -20%) rotate(-45deg);
-      box-shadow: inset -5px -5px 15px rgba(0,0,0,0.3);
-    }
-    .heart::before, .heart::after {
-      content: '';
-      position: absolute;
-      width: 110px;
-      height: 110px;
-      background: var(--heart-color);
-      border-radius: 50%;
-    }
-    .heart::before {
-      top: -55px;
-      left: 0;
-    }
-    .heart::after {
-      top: 0;
-      left: 55px;
-    }
+        /* Инструкция внизу */
+        .hint {
+            position: absolute;
+            bottom: 40px;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: sans-serif;
+            font-size: 14px;
+            pointer-events: none;
+            letter-spacing: 1px;
+            transition: opacity 0.5s;
+        }
+        .state-2 ~ .hint { opacity: 0; } /* Прячем подсказку, когда письмо полностью открыто */
 
-    /* --- ГЕОМЕТРИЯ 4-Х СТВОРОК --- */
-
-    /* Верхняя створка */
-    .flap-top {
-      top: 0; left: 0;
-      width: var(--size); height: var(--half);
-      transform-origin: top center;
-      clip-path: polygon(0 0, 100% 0, 50% 100%);
-    }
-    .flap-top .heart-canvas { top: 0; left: 0; }
-    .flap-top .face.back { transform: rotateX(180deg); }
-
-    /* Нижняя створка */
-    .flap-bottom {
-      bottom: 0; left: 0;
-      width: var(--size); height: var(--half);
-      transform-origin: bottom center;
-      clip-path: polygon(50% 0, 100% 100%, 0 100%);
-    }
-    .flap-bottom .heart-canvas { top: calc(var(--half) * -1); left: 0; }
-    .flap-bottom .face.back { transform: rotateX(-180deg); }
-
-    /* Левая створка */
-    .flap-left {
-      top: 0; left: 0;
-      width: var(--half); height: var(--size);
-      transform-origin: center left;
-      clip-path: polygon(0 0, 100% 50%, 0 100%);
-    }
-    .flap-left .heart-canvas { top: 0; left: 0; }
-    .flap-left .face.back { transform: rotateY(-180deg); }
-
-    /* Правая створка */
-    .flap-right {
-      top: 0; right: 0;
-      width: var(--half); height: var(--size);
-      transform-origin: center right;
-      clip-path: polygon(100% 0, 100% 100%, 0 50%);
-    }
-    .flap-right .heart-canvas { top: 0; left: calc(var(--half) * -1); }
-    .flap-right .face.back { transform: rotateY(180deg); }
-
-
-    /* --- ЭТАПЫ АНИМАЦИИ --- */
-
-    /* ЭТАП 0: Закрыто */
-    .stage-0 .flap { transform: rotate3d(0,0,0,0); }
-
-    /* ЭТАП 1: Полуоткрыто (форма звезды/цветка) */
-    .stage-1 {
-      /* Меняем ракурс камеры, чтобы лучше показать 3D */
-      transform: rotateX(45deg) rotateZ(15deg) scale(0.9);
-    }
-    .stage-1 .flap-top { transform: rotateX(115deg); }
-    .stage-1 .flap-bottom { transform: rotateX(-115deg); }
-    .stage-1 .flap-left { transform: rotateY(-115deg); }
-    .stage-1 .flap-right { transform: rotateY(115deg); }
-
-    /* ЭТАП 2: Полностью открыто */
-    .stage-2 {
-      /* Выравниваем прямо и уменьшаем масштаб, чтобы огромное раскрытое письмо влезло в экран */
-      transform: rotateX(0deg) rotateZ(0deg) scale(0.6);
-    }
-    .stage-2 .flap-top { transform: rotateX(180deg); }
-    .stage-2 .flap-bottom { transform: rotateX(-180deg); }
-    .stage-2 .flap-left { transform: rotateY(-180deg); }
-    .stage-2 .flap-right { transform: rotateY(180deg); }
-
-    /* Подсказка снизу */
-    .instruction {
-      position: fixed;
-      bottom: 40px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.7);
-      color: #f4ebd8;
-      padding: 12px 25px;
-      border-radius: 30px;
-      font-size: 1rem;
-      letter-spacing: 1px;
-      pointer-events: none;
-      transition: opacity 0.5s;
-      white-space: nowrap;
-      z-index: 100;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-    }
-
-    /* Адаптация под маленькие экраны */
-    @media (max-width: 400px) {
-      .stage-2 { transform: rotateX(0deg) rotateZ(0deg) scale(0.48); }
-    }
-  </style>
+    </style>
 </head>
 <body>
 
-  <div class="scene" id="sceneContainer">
-    <!-- Письмо (изначально класс stage-0) -->
-    <div class="letter-wrapper stage-0" id="wrapper">
-      
-      <!-- Само послание (показывается в самом конце) -->
-      <div class="letter-base">
-        <h1>My dear friend,</h1>
-        <p>I love you very much and I want to be there for you when you need me.</p>
-        <div class="signature">With love, Alex ❤️</div>
-      </div>
-
-      <!-- ВЕРХНЯЯ СТВОРКА -->
-      <div class="flap flap-top">
-        <div class="face front">
-          <!-- Этот холст центрует графику так, чтобы при обрезке клип-патом всё идеально совпадало -->
-          <div class="heart-canvas">
-            <div class="vintage-border"></div>
-            <div class="corner-decor c-tl">✿</div>
-            <div class="corner-decor c-tr">✿</div>
-            <div class="heart"></div>
-          </div>
+    <div id="scene" class="state-0" onclick="nextState()">
+        
+        <div class="base-paper">
+            <p class="greeting">My dear friend,</p>
+            <p class="message">I love you very much and I want to be there for you when you need me.</p>
+            <p class="signature">With love,<br>Darina <span class="heart-icon">♥</span></p>
         </div>
-        <div class="face back">🌹</div>
-      </div>
 
-      <!-- ПРАВАЯ СТВОРКА -->
-      <div class="flap flap-right">
-        <div class="face front">
-          <div class="heart-canvas">
-            <div class="vintage-border"></div>
-            <div class="corner-decor c-tr">✿</div>
-            <div class="corner-decor c-br">✿</div>
-            <div class="heart"></div>
-          </div>
+        <div class="flap top">
+            <div class="face inner"></div>
+            <div class="face outer"><div class="heart-part"></div></div>
         </div>
-        <div class="face back">🗝️</div>
-      </div>
-
-      <!-- НИЖНЯЯ СТВОРКА -->
-      <div class="flap flap-bottom">
-        <div class="face front">
-          <div class="heart-canvas">
-            <div class="vintage-border"></div>
-            <div class="corner-decor c-bl">✿</div>
-            <div class="corner-decor c-br">✿</div>
-            <div class="heart"></div>
-          </div>
+        
+        <div class="flap bottom">
+            <div class="face inner"></div>
+            <div class="face outer"><div class="heart-part"></div></div>
         </div>
-        <div class="face back">🏛️</div>
-      </div>
-
-      <!-- ЛЕВАЯ СТВОРКА -->
-      <div class="flap flap-left">
-        <div class="face front">
-          <div class="heart-canvas">
-            <div class="vintage-border"></div>
-            <div class="corner-decor c-tl">✿</div>
-            <div class="corner-decor c-bl">✿</div>
-            <div class="heart"></div>
-          </div>
+        
+        <div class="flap left">
+            <div class="face inner"></div>
+            <div class="face outer"><div class="heart-part"></div></div>
         </div>
-        <div class="face back">🕊️</div>
-      </div>
+        
+        <div class="flap right">
+            <div class="face inner"></div>
+            <div class="face outer"><div class="heart-part"></div></div>
+        </div>
 
     </div>
-  </div>
 
-  <div class="instruction" id="instructionText">👆 Нажми, чтобы открыть</div>
+    <div class="hint">✨ Нажми на письмо ✨</div>
 
-  <script>
-    const wrapper = document.getElementById('wrapper');
-    const instruction = document.getElementById('instructionText');
-    const container = document.getElementById('sceneContainer');
+    <script>
+        // Простой скрипт, который переключает 3 состояния по кругу
+        let currentState = 0;
+        const scene = document.getElementById('scene');
 
-    let stage = 0; // 0 = закрыто, 1 = звезда (3D), 2 = плоское письмо
-    let isAnimating = false;
-
-    function updateUI() {
-      // Меняем классы анимации
-      wrapper.className = `letter-wrapper stage-${stage}`;
-      
-      // Меняем текст подсказки
-      if (stage === 0) {
-        instruction.textContent = '👆 Нажми, чтобы открыть';
-      } else if (stage === 1) {
-        instruction.textContent = '✨ Нажми ещё раз';
-      } else if (stage === 2) {
-        instruction.textContent = '💌 С любовью';
-      }
-    }
-
-    function goToNextStage() {
-      if (isAnimating) return;
-      
-      // Блокируем клики на время анимации (1.5 секунды из CSS)
-      isAnimating = true;
-      
-      if (stage === 0) {
-        stage = 1;
-      } else if (stage === 1) {
-        stage = 2;
-      } else if (stage === 2) {
-        // По желанию: если нажать в самом конце, можно снова сложить письмо
-        stage = 0; 
-      }
-      
-      updateUI();
-
-      setTimeout(() => {
-        isAnimating = false;
-      }, 1500); // 1.5s - это время transition
-    }
-
-    // Обработчики кликов
-    container.addEventListener('click', goToNextStage);
-    
-    // Предотвращаем баги с двойным тапом на смартфонах
-    container.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      goToNextStage();
-    });
-
-    updateUI();
-  </script>
+        function nextState() {
+            // Удаляем старый класс
+            scene.classList.remove('state-' + currentState);
+            
+            // Увеличиваем состояние (0 -> 1 -> 2 -> 0)
+            currentState = (currentState + 1) % 3;
+            
+            // Добавляем новый класс
+            scene.classList.add('state-' + currentState);
+        }
+    </script>
 </body>
 </html>
